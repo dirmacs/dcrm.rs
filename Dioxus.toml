@@ -1,0 +1,27 @@
+[application]
+name = "dcrm"
+default_platform = "desktop"
+out_dir = "dist"
+asset_dir = "assets"
+
+[desktop]
+title = "DCRM - Dirmacs CRM"
+width = 1400
+height = 900
+resizable = true
+min_width = 1024
+min_height = 768
+
+[desktop.window]
+decorations = true
+transparent = false
+
+[web.app]
+title = "DCRM - Dirmacs CRM"
+
+[web.watcher]
+reload_html = true
+watch_path = ["src", "assets"]
+
+[web.resource]
+style = ["main.css"]
