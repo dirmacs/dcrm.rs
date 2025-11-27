@@ -156,7 +156,7 @@ pub fn delete_activity(data: &mut Signal<AppData>, id: &str) {
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum SearchResult {
     Contact(Contact),
     Deal(Deal),

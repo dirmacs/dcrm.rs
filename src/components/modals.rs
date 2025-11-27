@@ -419,3 +419,153 @@ fn DealModal(deal: Option<Deal>) -> Element {
         }
     }
 }
+
+// ============================================================================
+// Activity Modal
+// ============================================================================
+
+#[component]
+fn ActivityModal() -> Element {
+    let mut modal = use_modal();
+    let mut data = use_app_data();
+
+    let mut activity_type = use_signal(|| ActivityType::Task);
+    let mut title = use_signal(|| String::new());
+    let mut description = use_signal(|| String::new());
+    let mut contact_id = use_signal(|| None::<String>);
+    let mut deal_id = use_signal(|| None::<String>);
+
+    let contacts = data.read().contacts.clone();
+    let deals = data.read().deals.clone();
+
+    let handle_save = move |_| {
+        let mut activity = Activity::new(*activity_type.read(), title.read().clone());
+
+        activity.description = if description.read().is_empty() {
+            None
+        } else {
+            Some(description.read().clone())
+        };
+        activity.contact_id = contact_id.read().clone();
+        activity.deal_id = deal_id.read().clone();
+
+        add_activity(&mut data, activity);
+        modal.set(Modal::None);
+    };
+
+    rsx! {
+        div {
+            class: "modal-backdrop",
+            onclick: move |_| modal.set(Modal::None),
+
+            div {
+                class: "modal",
+                onclick: |e| e.stop_propagation(),
+
+                div { class: "modal-header",
+                    h3 { class: "modal-title", "New Activity" }
+                    button {
+                        class: "btn btn-ghost btn-icon",
+                        onclick: move |_| modal.set(Modal::None),
+                        "✕"
+                    }
+                }
+
+                div { class: "modal-body",
+                    div { class: "form-group",
+                        label { class: "form-label", "Type" }
+                        div { class: "flex gap-2",
+                            for at in [ActivityType::Task, ActivityType::Call, ActivityType::Email, ActivityType::Meeting, ActivityType::Note] {
+                                button {
+                                    class: if *activity_type.read() == at { "btn btn-secondary btn-sm" } else { "btn btn-ghost btn-sm" },
+                                    onclick: move |_| activity_type.set(at),
+                                    "{at.icon()} {at.display_name()}"
+                                }
+                            }
+                        }
+                    }
+
+                    div { class: "form-group",
+                        label { class: "form-label", "Title *"}
+                        input {
+                            class: "form-input",
+                            r#type: "text",
+                            placeholder: "What needs to be done?",
+                            value: "{title}",
+                            oninput: move |e| title.set(e.value()),
+                        }
+                    }
+
+                    div { class: "form-group",
+                        label { class: "form-label", "Description" }
+                        textarea {
+                            class: "form-input",
+                            placeholder: "Add more details...",
+                            value: "{description}",
+                            oninput: move |e| description.set(e.value()),
+                        }
+                    }
+
+                    div { class: "grid grid-cols-2 gap-4",
+                        div { class: "form-group",
+                            label { class: "form-label", "Contact" }
+                            select {
+                                class: "form-input form-select",
+                                onchange: move |e| {
+                                    let val = e.value();
+                                    contact_id.set(if val.is_empty() { None } else { Some(val) });
+                                },
+                                option { value: "", "Select contact..." }
+                                for c in &contacts {
+                                    option { value: "{c.id}", "{c.full_name()}" }
+                                }
+                            }
+                        }
+                        div { class: "form-group",
+                            label { class: "form-label", "Deal" }
+                            select {
+                                class: "form-input form-select",
+                                onchange: move |e| {
+                                    let val = e.value();
+                                    deal_id.set(if val.is_empty() { None } else { Some(val) });
+                                },
+                                option { value: "", "Select deal..." }
+                                for d in &deals {
+                                    option { value: "{d.id}", "{d.title}" }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                div { class: "modal-footer",
+                    button {
+                        class: "btn btn-secondary",
+                        onclick: move |_| modal.set(Modal::None),
+                        "Cancel"
+                    }
+                    button {
+                        class: "btn btn-primary",
+                        onclick: handle_save,
+                        "Create Activity"
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============================================================================
+// Search Modal
+// ============================================================================
+
+#[component]
+fn SearchResultItem(result: SearchResult, on_select: EventHandler<MouseEvent>) -> Element {
+    let type_badge = match &result {
+        SearchResult::Contact(_) => ("◎", "Contact"),
+        SearchResult::Deal(_) => ("◈", "Deal"),
+        SearchResult::Activity(_) => ("◇", "Activity"),
+    };
+
+    rsx! {}
+}
