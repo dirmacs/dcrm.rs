@@ -1,3 +1,4 @@
+mod components;
 mod models;
 mod state;
 
