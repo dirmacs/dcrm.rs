@@ -1,4 +1,4 @@
-use crate::models::{Activity, ActivityType, AppData, Contact, Deal, DealStage, save_data};
+use crate::models::{Activity, AppData, Contact, Deal, DealStage, save_data};
 use dioxus::prelude::*;
 
 // ============================================================================

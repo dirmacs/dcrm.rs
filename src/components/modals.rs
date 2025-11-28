@@ -66,7 +66,7 @@ fn ContactModal(contact: Option<Contact>) -> Element {
         );
 
         if is_edit {
-            contact.id == contact_id.clone();
+            contact.id = contact_id.clone();
             contact.created_at = initial.created_at;
         }
 
