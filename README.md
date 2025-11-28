@@ -1,12 +1,12 @@
 # DCRM - Dirmacs CRM
 
+![DCRM Dashboard ](./assets/dashboard.png)
+
 <p align="center">
   <img src="https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white" alt="Rust">
   <img src="https://img.shields.io/badge/Dioxus-0.7-blue" alt="Dioxus">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License">
 </p>
-
-![DCRM Dashboard ](./assets/dashboard.png)
 
 A minimal, efficient customer relationship manager built with Rust and Dioxus.
 
