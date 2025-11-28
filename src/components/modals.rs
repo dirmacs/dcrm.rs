@@ -10,24 +10,24 @@ use dioxus::prelude::*;
 pub fn ModalContainer() -> Element {
     let modal = use_modal();
 
-    // match &*modal.read() {
-    //     Modal::None => rsx! {},
-    //     Modal::NewContact => rsx! { Contact { contact: None } },
-    //     Modal::EditContact(id) => {
-    //         let data = use_app_data();
-    //         let contact = data.read().contact_by_id(id).cloned();
-    //         rsx! { ContactModal { contact }}
-    //     }
-    //     Modal::NewDeal => rsx! { DealModal { deal: None } },
-    //     Modal::EditDeal(id) => {
-    //         let data = use_app_data();
-    //         let deal = data.read().deal_by_id(id).cloned();
-    //         rsx! { DealModal { deal } }
-    //     }
-    //     Modal::NewActivity => rsx! { ActivityModal {} },
-    //     Modal::Search => rsx! { SearchModal {} },
-    //     Modal::ContactDetail(_) | Modal::DealDetail(_) => rsx! {},
-    // }
+    match &*modal.read() {
+        Modal::None => rsx! {},
+        Modal::NewContact => rsx! { ContactModal { contact: None } },
+        Modal::EditContact(id) => {
+            let data = use_app_data();
+            let contact = data.read().contact_by_id(id).cloned();
+            rsx! { ContactModal { contact }}
+        }
+        Modal::NewDeal => rsx! { DealModal { deal: None } },
+        Modal::EditDeal(id) => {
+            let data = use_app_data();
+            let deal = data.read().deal_by_id(id).cloned();
+            rsx! { DealModal { deal } }
+        }
+        Modal::NewActivity => rsx! { ActivityModal {} },
+        Modal::Search => rsx! { SearchModal {} },
+        Modal::ContactDetail(_) | Modal::DealDetail(_) => rsx! {},
+    }
 }
 
 // ============================================================================
@@ -560,6 +560,77 @@ fn ActivityModal() -> Element {
 // ============================================================================
 
 #[component]
+fn SearchModal() -> Element {
+    let mut modal = use_modal();
+    let mut search_query = use_search_query();
+    let data = use_app_data();
+
+    let results = search(&data.read(), &search_query.read());
+
+    rsx! {
+        div {
+            class: "modal-backdrop",
+            onclick: move |_| {
+                search_query.set(String::new());
+                modal.set(Modal::None);
+            },
+
+            div {
+                class: "modal",
+                style: "max-width: 600px;",
+                onclick: |e| e.stop_propagation(),
+
+                div {
+                    class: "p-4",
+                    style: "border-bottom: 1px solid var(--border);",
+
+                    div { class: "search-bar",
+                        style: "width: 100%; background: var(--bg-tertiary);",
+                        span { style: "color: var(--text-muted);", "⌕" }
+                        input {
+                            class: "search-input",
+                            r#type: "text",
+                            placeholder: "Search contacts, deals, activities...",
+                            value: "{search_query}",
+                            oninput: move |e| search_query.set(e.value()),
+                            autofocus: true,
+
+                        }
+                        span { class: "search-shortcut", "ESC" }
+                    }
+                }
+
+                div {
+                    style: "max-height: 400px; overflow-y: auto;",
+
+                    if results.is_empty() && !search_query.read().is_empty() {
+                        div { class: "empty-state",
+                            style: "padding: 2rem;",
+                            div { class: "empty-state-title", "No results found" }
+                            div { class: "empty-state-text", "Try a different search term" }
+                        }
+                    } else if results.is_empty() {
+                        div { class: "p-4 text-center text-muted",
+                            "Start typing to search..."
+                        }
+                    } else {
+                        for result in results {
+                            SearchResultItem {
+                                result: result,
+                                on_select: move |_| {
+                                  search_query.set(String::new());
+                                  modal.set(Modal::None);
+                                },
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[component]
 fn SearchResultItem(result: SearchResult, on_select: EventHandler<MouseEvent>) -> Element {
     let type_badge = match &result {
         SearchResult::Contact(_) => ("◎", "Contact"),
@@ -567,5 +638,22 @@ fn SearchResultItem(result: SearchResult, on_select: EventHandler<MouseEvent>) -
         SearchResult::Activity(_) => ("◇", "Activity"),
     };
 
-    rsx! {}
+    rsx! {
+        div {
+            class: "contact-item",
+            onclick: move |e| on_select.call(e),
+
+            div {
+                class: "activity-icon",
+                "{type_badge.0}"
+            }
+
+            div { class: "contact-info",
+                div { class: "contact-name", "{result.title()}" }
+                div { class: "contact-details", "{result.subtitle()}" }
+            }
+
+            span { class: "tag", "{type_badge.1}"}
+        }
+    }
 }
