@@ -1,14 +1,15 @@
 # DCRM - Dirmacs CRM
 
-![DCRM Dashboard ](./assets/dashboard.png)
+![DCRM Dashboard](./assets/dashboard.png)
 
 <p align="center">
   <img src="https://img.shields.io/badge/Rust-000000?style=flat&logo=rust&logoColor=white" alt="Rust">
-  <img src="https://img.shields.io/badge/Dioxus-0.7-blue" alt="Dioxus">
+  <img src="https://img.shields.io/badge/Dioxus-0.7-blue" alt="Dioxus 0.7">
+  <img src="https://img.shields.io/badge/Tailwind-v4-38bdf8" alt="Tailwind v4">
   <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License">
 </p>
 
-A minimal, efficient customer relationship manager built with Rust and Dioxus.
+A minimal, efficient customer relationship manager built with Rust, Dioxus 0.7, and Tailwind CSS v4.
 
 ## Philosophy
 
@@ -25,138 +26,375 @@ That's it. No marketing automation. No social media integrations. No AI-powered-
 
 ## Features
 
-### Contact Management
-- Full contact profiles with company, position, tags
-- Quick search across all contacts
+### 📇 Contact Management
+- Full contact profiles with company, position, and tags
+- Real-time fuzzy search across all contacts
 - Activity history per contact
-- Deal associations
+- Deal associations and tracking
+- Custom notes and metadata
 
-### Deal Pipeline
-- Visual Kanban-style board
+### 💼 Deal Pipeline
+- Visual Kanban-style board with 6 stages (Lead → Qualified → Proposal → Negotiation → Won/Lost)
 - Drag-and-drop stage progression
-- Pipeline value tracking
+- Pipeline value tracking with currency formatting
 - Weighted probability forecasting
+- Deal-to-contact associations
 
-### Activity Tracking
-- Tasks, calls, emails, meetings, notes
+### ✅ Activity Tracking
+- Multiple activity types: Tasks, Calls, Emails, Meetings, Notes
 - Filter by type or completion status
 - Link activities to contacts and deals
-- Quick task completion
+- Quick task completion toggle
+- Due date tracking
+- Outcome recording
 
-### Dashboard
-- Pipeline overview
+### 📊 Dashboard
+- Real-time pipeline overview
 - Recent activity feed
-- Pending tasks
+- Pending tasks list
 - Key metrics at a glance
 
 ## Tech Stack
 
-- **Rust** - Memory-safe, blazingly fast
-- **Dioxus 0.6** - React-like UI framework for Rust
-- **WebView** - Native desktop rendering (< 5MB binary)
-- **Local Storage** - JSON-based persistence
+| Technology | Purpose | Version |
+|------------|---------|---------|
+| **Rust** | Memory-safe systems language | 2024 edition |
+| **Dioxus** | React-like UI framework for Rust | 0.7.1 |
+| **Tailwind CSS** | Utility-first CSS framework | v4 |
+| **Tokio** | Async runtime | 1.48+ |
+| **Serde** | Serialization/deserialization | 1.0+ |
+| **Chrono** | Date and time handling | 0.4+ |
+
+### Architecture
+
+- **Frontend**: Dioxus with WebView renderer (native desktop)
+- **Styling**: Tailwind CSS v4 with automatic DX integration
+- **State**: Reactive signals with context providers
+- **Storage**: Local JSON file persistence
+- **Search**: Fuzzy matching for real-time filtering
 
 ## Installation
 
 ### Prerequisites
 
-- [Rust](https://rustup.rs/) (stable toolchain)
-- [Dioxus CLI](https://dioxuslabs.com/learn/0.6/getting_started)
+- [Rust](https://rustup.rs/) (stable toolchain, 2024 edition)
+- [Dioxus CLI](https://dioxuslabs.com/learn/0.7/getting_started)
 
 ```bash
 # Install Rust (if not already installed)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Install cargo-binstall for faster CLI installation
-cargo install cargo-binstall
-
 # Install Dioxus CLI
-cargo binstall dioxus-cli
+cargo install dioxus-cli
 ```
 
-### Linux Dependencies
+### Platform-Specific Dependencies
 
+#### Linux
 ```bash
 # Ubuntu/Debian
 sudo apt install libwebkit2gtk-4.1-dev libgtk-3-dev libappindicator3-dev
 
 # Fedora
 sudo dnf install gtk3-devel webkit2gtk4.1-devel libappindicator-gtk3-devel
+
+# Arch
+sudo pacman -S webkit2gtk gtk3
+```
+
+#### macOS
+```bash
+# No additional dependencies required
+# WebKit is included with macOS
+```
+
+#### Windows
+```bash
+# No additional dependencies required
+# WebView2 is included with Windows 10+
 ```
 
 ### Build & Run
 
 ```bash
 # Clone the repository
+git clone https://github.com/dirmacs/dcrm.git
 cd dcrm
 
 # Development mode with hot-reload
+# (DX automatically handles Tailwind CSS compilation)
 dx serve
 
 # Build for release
 dx build --release
 
-# Bundle for distribution
-dx bundle --release
+# Run the release build
+./dist/dcrm  # or dcrm.exe on Windows
 ```
 
 ## Project Structure
 
 ```
 dcrm/
-├── Cargo.toml          # Dependencies
-├── Dioxus.toml         # Dioxus configuration
+├── src/
+│   ├── main.rs              # Application entry point & routing
+│   ├── components/
+│   │   ├── mod.rs           # Component exports
+│   │   ├── modals.rs        # Modal dialogs (contact, deal, activity forms)
+│   │   ├── sidebar.rs       # Navigation sidebar
+│   │   └── topbar.rs        # Top navigation bar with search
+│   ├── models/
+│   │   └── mod.rs           # Data models (Contact, Deal, Activity, AppData)
+│   ├── pages/
+│   │   ├── mod.rs           # Page exports
+│   │   ├── dashboard.rs     # Dashboard page with metrics
+│   │   ├── contacts.rs      # Contact list and management
+│   │   ├── deals.rs         # Deal pipeline Kanban board
+│   │   └── activities.rs    # Activity list and filtering
+│   └── state/
+│       └── mod.rs           # Global state management (View, Modal enums)
 ├── assets/
-│   └── main.css        # Styles
-└── src/
-    ├── main.rs         # Application entry point
-    ├── models/         # Data models (Contact, Deal, Activity)
-    ├── state/          # State management & actions
-    ├── components/     # Reusable UI components
-    └── pages/          # Page components
+│   ├── dashboard.png        # Screenshot for README
+│   └── tailwind.css         # Generated by DX (gitignored)
+├── tailwind.css             # Tailwind v4 source (DX auto-detected)
+├── Cargo.toml               # Rust dependencies
+├── Dioxus.toml              # Dioxus configuration
+├── LICENSE                  # MIT License
+└── README.md                # This file
+```
+
+### Source Code Statistics
+
+- **Total Lines**: ~2,800 lines of Rust
+- **Components**: 4 reusable UI components
+- **Pages**: 4 main views
+- **Models**: 3 core data structures (Contact, Deal, Activity)
+
+## Data Models
+
+### Contact
+```rust
+{
+    id: String,              // UUID
+    first_name: String,
+    last_name: String,
+    email: String,
+    phone: Option<String>,
+    company: Option<String>,
+    position: Option<String>,
+    tags: Vec<String>,
+    notes: Option<String>,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>
+}
+```
+
+### Deal
+```rust
+{
+    id: String,              // UUID
+    contact_id: String,      // Reference to Contact
+    title: String,
+    value: f64,
+    stage: DealStage,        // Lead | Qualified | Proposal | Negotiation | Won | Lost
+    probability: u8,         // 0-100%
+    expected_close: DateTime<Utc>,
+    notes: Option<String>,
+    created_at: DateTime<Utc>,
+    updated_at: DateTime<Utc>
+}
+```
+
+### Activity
+```rust
+{
+    id: String,              // UUID
+    contact_id: Option<String>,
+    deal_id: Option<String>,
+    activity_type: ActivityType,  // Task | Call | Email | Meeting | Note
+    subject: String,
+    description: Option<String>,
+    due_date: Option<DateTime<Utc>>,
+    completed: bool,
+    completed_at: Option<DateTime<Utc>>,
+    outcome: Option<String>,
+    created_at: DateTime<Utc>
+}
 ```
 
 ## Data Storage
 
-DCRM stores data locally in JSON format:
+DCRM stores all data locally in a single JSON file for simplicity and portability.
+
+### Storage Locations
 
 - **Linux**: `~/.local/share/dcrm/data.json`
 - **macOS**: `~/Library/Application Support/dcrm/data.json`
 - **Windows**: `%APPDATA%\dcrm\data.json`
 
+### Data Structure
+```json
+{
+  "contacts": [...],
+  "deals": [...],
+  "activities": [...]
+}
+```
+
+### Sample Data
+
+On first launch, DCRM creates sample data to demonstrate features. This includes:
+- 5 sample contacts with various companies
+- 6 sample deals across different pipeline stages
+- 10 sample activities (tasks, calls, meetings)
+
+## Tailwind CSS Integration
+
+DCRM uses **Tailwind CSS v4** with automatic Dioxus CLI integration.
+
+### How It Works
+
+1. DX CLI auto-detects `tailwind.css` at the project root
+2. Downloads Tailwind CLI automatically (first run only)
+3. Scans Rust source files for Tailwind classes
+4. Generates `assets/tailwind.css` automatically
+5. Watches for changes in development mode
+
+### Custom Theme
+
+```css
+@theme {
+    /* Dark Mode Palette */
+    --color-dark-900: #0a0a0b;  /* Deep black background */
+    --color-dark-800: #111113;  /* Panel background */
+    --color-dark-700: #18181b;  /* Card background */
+
+    /* Accent Colors */
+    --color-accent: #00d4ff;     /* Electric cyan */
+    --color-accent-dim: #00a8cc; /* Dimmed cyan */
+
+    /* Typography */
+    --font-mono: "JetBrains Mono", monospace;
+    --font-sans: "Inter", system-ui, sans-serif;
+}
+```
+
+## Design System
+
+DCRM uses an **industrial minimal** design language inspired by modern developer tools.
+
+### Color Palette
+
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Deep Black | `#0a0a0b` | Main background |
+| Dark Gray | `#111113` | Panel background |
+| Mid Gray | `#18181b` | Card background |
+| Electric Cyan | `#00d4ff` | Primary accent, CTAs |
+| Zinc Gray | `#3f3f46` | Borders, dividers |
+
+### Typography
+
+- **UI Text**: Inter (300, 400, 500, 600, 700)
+- **Data/Code**: JetBrains Mono (400, 500, 600, 700)
+- **Base Size**: 14px
+- **Line Height**: 1.5
+
+### Components
+
+- **Buttons**: Minimal with hover states, accent color for primary actions
+- **Cards**: Subtle borders, dark backgrounds, hover elevation
+- **Forms**: Inline validation, clear focus states
+- **Modals**: Centered overlay with backdrop blur
+- **Sidebar**: Fixed navigation with active state indicators
+
 ## Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
-| `⌘/Ctrl + K` | Open search |
-| `Escape` | Close modal/search |
+| `Ctrl/⌘ + K` | Quick search contacts |
+| `Escape` | Close modal or clear search |
+| `Enter` | Submit active form |
 
-## Design System
+## Development
 
-DCRM uses an industrial minimal design language:
+### Hot Reload
 
-- **Background**: Deep blacks (#0a0a0b)
-- **Accent**: Electric cyan (#00d4ff)
-- **Typography**: JetBrains Mono (data) + Inter (UI)
-- **Borders**: Subtle zinc grays
+DX provides instant hot-reload during development:
+
+```bash
+dx serve
+# Make changes to Rust code or Tailwind classes
+# App updates automatically without losing state
+```
+
+### Debug Mode
+
+Run with console logging:
+
+```bash
+RUST_LOG=debug dx serve
+```
+
+### Code Style
+
+- **Formatting**: `cargo fmt`
+- **Linting**: `cargo clippy`
+- **Testing**: `cargo test`
 
 ## Roadmap
 
-- [ ] Data import/export (CSV)
-- [ ] Keyboard navigation
+### v0.2 (Planned)
+- [ ] Data import/export (CSV, JSON)
+- [ ] Full keyboard navigation
+- [ ] Contact merging/deduplication
+- [ ] Bulk operations (tags, delete)
+- [ ] Activity templates
+
+### v0.3 (Future)
 - [ ] Dark/Light theme toggle
-- [ ] Multiple pipelines
-- [ ] Contact merging
-- [ ] Undo/Redo
+- [ ] Multiple deal pipelines
+- [ ] Email integration (IMAP/SMTP)
+- [ ] Calendar view for activities
+- [ ] Undo/Redo system
+- [ ] Advanced filtering and sorting
+
+### v1.0 (Vision)
+- [ ] Cross-platform sync (optional cloud)
+- [ ] Mobile companion app
+- [ ] API/webhook integrations
+- [ ] Custom fields and workflows
+- [ ] Reports and analytics
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Here's how you can help:
+
+1. **Fork the repository**
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Commit your changes** (`git commit -m 'Add amazing feature'`)
+4. **Push to the branch** (`git push origin feature/amazing-feature`)
+5. **Open a Pull Request**
+
+Please ensure your code:
+- Follows Rust style guidelines (`cargo fmt`, `cargo clippy`)
+- Includes appropriate documentation
+- Maintains the minimal philosophy of the project
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
 
+Copyright (c) 2025 Dirmacs
+
+## Acknowledgments
+
+- **Dioxus Team** - For the excellent React-like Rust framework
+- **Tailwind Labs** - For the utility-first CSS framework
+- **Rust Community** - For the amazing ecosystem
+
 ---
 
-Built with ❤️ by [Dirmacs](https://dirmacs.com)
+**Built with ❤️ and ⚡ by [Dirmacs](https://dirmacs.com)**
+
+*DCRM: Because your CRM should be a tool, not a second job.*

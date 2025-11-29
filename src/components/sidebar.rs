@@ -1,5 +1,5 @@
-use crate::state::{View, use_app_data, use_current_view};
 use dioxus::prelude::*;
+use crate::state::{View, use_current_view, use_app_data};
 
 #[component]
 pub fn Sidebar() -> Element {
@@ -10,28 +10,33 @@ pub fn Sidebar() -> Element {
     let active_deals = data.read().active_deals_count();
 
     rsx! {
-        aside { class: "sidebar",
+        aside { 
+            class: "w-60 min-w-60 bg-dark-800 border-r border-zinc-800 flex flex-col h-full",
+            
             // Logo
-            div { class: "sidebar-header",
-                div { class: "logo",
-                    span { class: "logo-accent", "D" }
+            div { class: "px-4 py-5 border-b border-zinc-800",
+                div { class: "font-mono text-xl font-bold tracking-tight",
+                    span { class: "text-accent", "D" }
                     span { "CRM" }
                 }
             }
 
             // Navigation
-            nav { class: "sidebar-nav",
+            nav { class: "flex-1 p-4 overflow-y-auto",
                 // Main Section
-                div { class: "nav-section",
-                    div { class: "nav-section-title", "Main" }
-
+                div { class: "mb-6",
+                    div { class: "text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 px-3",
+                        "Main"
+                    }
+                    
                     NavItem {
                         label: "Dashboard",
                         icon: "◉",
                         active: *current_view.read() == View::Dashboard,
                         onclick: move |_| current_view.set(View::Dashboard),
+                        badge: None,
                     }
-
+                    
                     NavItem {
                         label: "Contacts",
                         icon: "◎",
@@ -39,7 +44,7 @@ pub fn Sidebar() -> Element {
                         onclick: move |_| current_view.set(View::Contacts),
                         badge: None,
                     }
-
+                    
                     NavItem {
                         label: "Deals",
                         icon: "◈",
@@ -47,7 +52,7 @@ pub fn Sidebar() -> Element {
                         onclick: move |_| current_view.set(View::Deals),
                         badge: Some(active_deals.to_string()),
                     }
-
+                    
                     NavItem {
                         label: "Activities",
                         icon: "◇",
@@ -58,8 +63,10 @@ pub fn Sidebar() -> Element {
                 }
 
                 // Quick Stats
-                div { class: "nav-section",
-                    div { class: "nav-section-title", "Pipeline" }
+                div { class: "mb-6",
+                    div { class: "text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-2 px-3",
+                        "Pipeline"
+                    }
                     QuickStat {
                         label: "Active Deals",
                         value: active_deals.to_string(),
@@ -76,10 +83,8 @@ pub fn Sidebar() -> Element {
             }
 
             // Footer
-            div {
-                style: "padding: 1rem; border-top: 1px solid var(--border); margin-top: auto;",
-                div {
-                    style: "font-size: 0.7rem; color: var(--text-muted); text-align: center;",
+            div { class: "p-4 border-t border-zinc-800 mt-auto",
+                div { class: "text-[10px] text-zinc-600 text-center",
                     "DCRM v0.1.0"
                 }
             }
@@ -93,27 +98,30 @@ fn NavItem(
     icon: &'static str,
     active: bool,
     onclick: EventHandler<MouseEvent>,
-    #[props(default)] badge: Option<String>,
+    badge: Option<String>,
 ) -> Element {
-    let class = if active {
-        "nav-item active"
+    let base_classes = "relative flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium cursor-pointer transition-colors mb-0.5";
+    let state_classes = if active {
+        "bg-accent/10 text-accent"
     } else {
-        "nav-item"
+        "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
     };
-
+    
     rsx! {
-        div {
-            class: "{class}",
+        div { 
+            class: "{base_classes} {state_classes}",
             onclick: move |e| onclick.call(e),
-            style: "position: relative;",
-
-            span { class: "nav-icon", "{icon}" }
+            
+            if active {
+                div { class: "absolute left-0 w-0.5 h-6 bg-accent rounded-r" }
+            }
+            
+            span { class: "text-lg opacity-70", "{icon}" }
             span { "{label}" }
-
+            
             if let Some(badge_text) = badge {
-                span {
-                    style: "margin-left: auto; font-size: 0.7rem; background: var(--bg-tertiary);
-                            padding: 2px 6px; border-radius: 10px; color: var(--text-muted);",
+                span { 
+                    class: "ml-auto text-[10px] bg-dark-700 px-1.5 py-0.5 rounded-full text-zinc-500",
                     "{badge_text}"
                 }
             }
@@ -124,17 +132,9 @@ fn NavItem(
 #[component]
 fn QuickStat(label: &'static str, value: String) -> Element {
     rsx! {
-        div {
-            style: "padding: 0.5rem 0.75rem; margin-bottom: 0.25rem;",
-            div {
-                style: "font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px;",
-                "{label}"
-            }
-            div {
-                style: "font-size: 0.875rem; font-weight: 600; color: var(--text-primary);
-                        font-family: var(--font-mono);",
-                "{value}"
-            }
+        div { class: "px-3 py-2",
+            div { class: "text-[10px] text-zinc-500 mb-0.5", "{label}" }
+            div { class: "text-sm font-semibold text-zinc-100 font-mono", "{value}" }
         }
     }
 }

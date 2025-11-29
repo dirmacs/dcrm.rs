@@ -1,6 +1,8 @@
 [application]
 name = "dcrm"
 default_platform = "desktop"
+out_dir = "dist"
+asset_dir = "assets"
 
 [desktop]
 title = "DCRM - Dirmacs CRM"

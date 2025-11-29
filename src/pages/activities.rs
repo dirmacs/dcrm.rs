@@ -32,28 +32,26 @@ pub fn ActivitiesPage() -> Element {
     let pending_count = data.read().pending_tasks_count();
 
     rsx! {
-        div { class: "content-area",
+        div { class: "flex-1 overflow-hidden p-6 flex flex-col",
             // Header
             div { class: "flex items-center justify-between mb-6",
-                div { class: "flex gap-4",
-                    h2 { class: "text-lg font-semibold", "Activities" }
+                div { class: "flex items-center gap-4",
+                    h2 { class: "text-lg font-semibold text-zinc-100", "Activities" }
                     if pending_count > 0 {
-                        span {
-                            class: "badge",
-                            style: "background: rgba(245, 158, 11, 0.15); color: var(--warning);",
+                        span { class: "text-xs bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded-full",
                             "{pending_count} pending"
                         }
                     }
                 }
                 button {
-                    class: "btn btn-primary",
+                    class: "px-4 py-2 bg-accent text-dark-900 text-sm font-medium rounded-md hover:bg-accent-dim transition-colors",
                     onclick: move |_| modal.set(Modal::NewActivity),
                     "+ New Activity"
                 }
             }
 
             // Filters
-            div { class: "flex gap-2 mb-6",
+            div { class: "flex gap-2 mb-6 flex-wrap",
                 FilterTab {
                     label: "All",
                     active: *filter.read() == ActivityFilter::All,
@@ -69,7 +67,9 @@ pub fn ActivitiesPage() -> Element {
                     active: *filter.read() == ActivityFilter::Completed,
                     onclick: move |_| filter.set(ActivityFilter::Completed),
                 }
-                div { style: "width: 1px; background: var(--border); margin: 0 0.5rem;" }
+
+                div { class: "w-px bg-zinc-700 mx-2" }
+
                 FilterTab {
                     label: "Tasks",
                     active: *filter.read() == ActivityFilter::Tasks,
@@ -98,26 +98,26 @@ pub fn ActivitiesPage() -> Element {
             }
 
             // Activity List
-            div { class: "card",
+            div { class: "bg-dark-800 border border-zinc-800 rounded-xl overflow-hidden flex-1",
                 if activities.is_empty() {
-                    div { class: "empty-state",
-                        div { class: "empty-state-icon", "◇" }
-                        div { class: "empty-state-title", "No activities found" }
-                        div { class: "empty-state-text",
-                            "No activities match your current filter"
+                    div { class: "flex flex-col items-center justify-center py-16 text-center",
+                        div { class: "w-16 h-16 bg-dark-700 rounded-full flex items-center justify-center text-2xl text-zinc-500 mb-4",
+                            "◇"
                         }
+                        div { class: "text-zinc-100 font-medium mb-1", "No activities found" }
+                        div { class: "text-sm text-zinc-500", "No activities match your current filter" }
                     }
                 } else {
-                    div { class: "table-container",
-                        table { class: "table",
+                    div { class: "overflow-x-auto",
+                        table { class: "w-full",
                             thead {
-                                tr {
-                                    th { style: "width: 40px;" }
-                                    th { "Activity" }
-                                    th { "Type" }
-                                    th { "Related To" }
-                                    th { "Date" }
-                                    th { style: "width: 80px;" }
+                                tr { class: "border-b border-zinc-800 bg-dark-700",
+                                    th { class: "w-10 px-4 py-3" }
+                                    th { class: "text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider", "Activity" }
+                                    th { class: "text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider", "Type" }
+                                    th { class: "text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider", "Related To" }
+                                    th { class: "text-left px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wider", "Date" }
+                                    th { class: "w-20 px-4 py-3" }
                                 }
                             }
                             tbody {
@@ -148,9 +148,9 @@ enum ActivityFilter {
 #[component]
 fn FilterTab(label: &'static str, active: bool, onclick: EventHandler<MouseEvent>) -> Element {
     let class = if active {
-        "btn btn-secondary btn-sm"
+        "px-3 py-1.5 text-sm rounded-md bg-dark-700 border border-zinc-700 text-zinc-100"
     } else {
-        "btn btn-ghost btn-sm"
+        "px-3 py-1.5 text-sm rounded-md text-zinc-400 hover:bg-dark-700 transition-colors"
     };
 
     rsx! {
@@ -184,82 +184,66 @@ fn ActivityRow(activity: Activity) -> Element {
         (None, None) => "—".to_string(),
     };
 
-    let row_opacity = if activity.completed {
-        "opacity: 0.5;"
+    let row_opacity = if activity.completed { "opacity-50" } else { "" };
+    let title_decoration = if activity.completed {
+        "line-through text-zinc-500"
     } else {
-        ""
+        "text-zinc-100"
     };
-    let title_style = if activity.completed {
-        "text-decoration: line-through; color: var(--text-muted);"
+    let checkbox_class = if activity.completed {
+        "w-5 h-5 border-2 rounded flex items-center justify-center cursor-pointer transition-colors bg-accent border-accent"
     } else {
-        ""
-    };
-
-    let checkbox_style = if activity.completed {
-        "width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease; background: var(--accent); border-color: var(--accent);"
-    } else {
-        "width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;"
+        "w-5 h-5 border-2 rounded flex items-center justify-center cursor-pointer transition-colors border-zinc-600 hover:border-accent"
     };
 
     rsx! {
         tr {
-            class: "table-row-clickable",
-            style: "{row_opacity}",
+            class: "border-b border-zinc-800 hover:bg-dark-700/50 transition-colors {row_opacity}",
 
             // Checkbox
-            td {
+            td { class: "px-4 py-3",
                 div {
-                    class: "cursor-pointer",
-                    style: "{checkbox_style}",
+                    class: "{checkbox_class}",
                     onclick: {
                         let id = activity_id.clone();
                         move |_| toggle_activity_completed(&mut data, &id)
                     },
                     if activity.completed {
-                        span { style: "color: var(--bg-primary); font-size: 12px;", "✓" }
+                        span { class: "text-dark-900 text-xs", "✓" }
                     }
                 }
             }
 
             // Title & Description
-            td {
-                div {
-                    class: "font-medium",
-                    style: "{title_style}",
-                    "{activity.title}"
-                }
+            td { class: "px-4 py-3",
+                div { class: "font-medium text-sm {title_decoration}", "{activity.title}" }
                 if let Some(desc) = &activity.description {
-                    div {
-                        class: "text-sm text-muted truncate",
-                        style: "max-width: 300px;",
-                        "{desc}"
-                    }
+                    div { class: "text-sm text-zinc-500 truncate max-w-xs", "{desc}" }
                 }
             }
 
             // Type
-            td {
-                span { class: "flex items-center gap-2",
+            td { class: "px-4 py-3",
+                span { class: "flex items-center gap-2 text-sm text-zinc-400",
                     span { "{activity.activity_type.icon()}" }
-                    span { class: "text-sm", "{activity.activity_type.display_name()}" }
+                    span { "{activity.activity_type.display_name()}" }
                 }
             }
 
             // Related
-            td {
-                span { class: "text-sm text-secondary", "{related}" }
+            td { class: "px-4 py-3",
+                span { class: "text-sm text-zinc-400", "{related}" }
             }
 
             // Date
-            td {
-                span { class: "text-sm text-muted font-mono", "{activity.format_date()}" }
+            td { class: "px-4 py-3",
+                span { class: "text-sm text-zinc-500 font-mono", "{activity.format_date()}" }
             }
 
             // Actions
-            td {
+            td { class: "px-4 py-3",
                 button {
-                    class: "btn btn-ghost btn-icon btn-sm",
-                    style: "color: var(--danger);",
+                    class: "w-8 h-8 flex items-center justify-center rounded text-zinc-500 hover:bg-red-500/10 hover:text-red-400 transition-colors",
                     onclick: {
                         let id = activity_id.clone();
                         move |_| delete_activity(&mut data, &id)

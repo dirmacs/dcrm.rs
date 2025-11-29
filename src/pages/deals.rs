@@ -8,10 +8,10 @@ pub fn DealsPage() -> Element {
     let mut modal = use_modal();
 
     rsx! {
-        div { class: "content-area",
+        div { class: "flex-1 overflow-hidden p-6 flex flex-col",
             // Header Stats
             div { class: "flex items-center justify-between mb-6",
-                div { class: "flex gap-6",
+                div { class: "flex gap-8",
                     PipelineStat {
                         label: "Total Pipeline",
                         value: format_currency(data.read().total_pipeline_value()),
@@ -26,14 +26,14 @@ pub fn DealsPage() -> Element {
                     }
                 }
                 button {
-                    class: "btn btn-primary",
+                    class: "px-4 py-2 bg-accent text-dark-900 text-sm font-medium rounded-md hover:bg-accent-dim transition-colors",
                     onclick: move |_| modal.set(Modal::NewDeal),
                     "+ New Deal"
                 }
             }
 
             // Pipeline Board
-            div { class: "pipeline-board",
+            div { class: "flex gap-4 flex-1 overflow-x-auto pb-4",
                 for stage in DealStage::active() {
                     PipelineColumn {
                         stage: stage,
@@ -55,8 +55,8 @@ pub fn DealsPage() -> Element {
 fn PipelineStat(label: &'static str, value: String) -> Element {
     rsx! {
         div {
-            div { class: "text-xs text-muted mb-1", "{label}" }
-            div { class: "font-mono font-semibold text-lg", "{value}" }
+            div { class: "text-xs text-zinc-500 mb-1", "{label}" }
+            div { class: "font-mono font-semibold text-lg text-zinc-100", "{value}" }
         }
     }
 }
@@ -65,25 +65,31 @@ fn PipelineStat(label: &'static str, value: String) -> Element {
 fn PipelineColumn(stage: DealStage, deals: Vec<Deal>) -> Element {
     let total_value: f64 = deals.iter().map(|d| d.value).sum();
 
+    let dot_color = match stage {
+        DealStage::Lead => "bg-blue-500",
+        DealStage::Qualified => "bg-violet-500",
+        DealStage::Proposal => "bg-amber-500",
+        DealStage::Negotiation => "bg-pink-500",
+        DealStage::Won => "bg-emerald-500",
+        DealStage::Lost => "bg-red-500",
+    };
+
     rsx! {
-        div { class: "pipeline-column",
+        div { class: "min-w-[280px] w-[280px] bg-dark-800 border border-zinc-800 rounded-xl flex flex-col max-h-full",
             // Column Header
-            div { class: "pipeline-column-header",
-                div { class: "pipeline-column-title",
-                    span {
-                        class: "pipeline-dot",
-                        style: "background: {stage.color()};",
-                    }
-                    span { class: "font-medium text-sm", "{stage.display_name()}" }
+            div { class: "flex items-center justify-between p-4 border-b border-zinc-800",
+                div { class: "flex items-center gap-2",
+                    span { class: "w-2 h-2 rounded-full {dot_color}" }
+                    span { class: "font-medium text-sm text-zinc-100", "{stage.display_name()}" }
                 }
                 div { class: "flex items-center gap-2",
-                    span { class: "pipeline-column-count", "{deals.len()}" }
-                    span { class: "text-xs text-muted font-mono", "{format_currency(total_value)}" }
+                    span { class: "text-xs bg-dark-700 px-2 py-0.5 rounded-full text-zinc-500", "{deals.len()}" }
+                    span { class: "text-xs text-zinc-500 font-mono", "{format_currency(total_value)}" }
                 }
             }
 
             // Column Body
-            div { class: "pipeline-column-body",
+            div { class: "flex-1 overflow-y-auto p-3 space-y-3",
                 for deal in deals {
                     DealCard { deal: deal }
                 }
@@ -106,7 +112,8 @@ fn DealCard(deal: Deal) -> Element {
 
     rsx! {
         div {
-            class: "deal-card",
+            class: "bg-dark-700 border border-zinc-700 rounded-lg p-3 cursor-pointer hover:border-zinc-600
+                    hover:-translate-y-0.5 hover:shadow-lg transition-all",
             onmouseenter: move |_| show_actions.set(true),
             onmouseleave: move |_| show_actions.set(false),
             onclick: {
@@ -115,7 +122,7 @@ fn DealCard(deal: Deal) -> Element {
             },
 
             div { class: "flex items-start justify-between",
-                div { class: "deal-card-title", "{deal.title}" }
+                div { class: "font-medium text-sm text-zinc-100 pr-2", "{deal.title}" }
                 if *show_actions.read() {
                     DealQuickActions {
                         deal_id: deal_id.clone(),
@@ -124,16 +131,16 @@ fn DealCard(deal: Deal) -> Element {
                 }
             }
 
-            div { class: "deal-card-company",
+            div { class: "text-sm text-zinc-500 mt-1 mb-3",
                 "{deal.company}"
                 if let Some(name) = contact_name {
-                    span { class: "text-muted", " • {name}" }
+                    span { class: "text-zinc-600", " • {name}" }
                 }
             }
 
-            div { class: "deal-card-footer",
-                span { class: "deal-card-value", "{deal.format_value()}" }
-                span { class: "deal-card-date", "{deal.probability}% prob." }
+            div { class: "flex items-center justify-between",
+                span { class: "font-mono text-sm font-semibold text-accent", "{deal.format_value()}" }
+                span { class: "text-xs text-zinc-500", "{deal.probability}% prob." }
             }
         }
     }
@@ -151,41 +158,57 @@ fn DealQuickActions(deal_id: String, current_stage: DealStage) -> Element {
 
     rsx! {
         div {
-            class: "dropdown relative",
+            class: "relative",
             onclick: move |e| {
                 e.stop_propagation();
-                show_menu.set(!show_menu());
+                let current = *show_menu.read();
+                show_menu.set(!current);
             },
 
             button {
-                class: "btn btn-ghost btn-icon btn-sm",
+                class: "w-6 h-6 flex items-center justify-center rounded text-zinc-400 hover:bg-zinc-600 hover:text-zinc-100 transition-colors",
                 "⋮"
             }
 
             if *show_menu.read() {
-                div { class: "dropdown-menu",
-                    div { class: "text-xs text-muted px-3 py-1", "Move to:" }
+                div {
+                    class: "absolute right-0 top-full mt-1 bg-dark-600 border border-zinc-700 rounded-lg min-w-[160px] shadow-xl z-10 py-1",
+
+                    div { class: "text-xs text-zinc-500 px-3 py-1", "Move to:" }
+
                     for stage in next_stages {
-                        div {
-                            class: "dropdown-item",
-                            onclick: {
-                                let id = deal_id.clone();
-                                move |e| {
-                                    e.stop_propagation();
-                                    update_deal_stage(&mut data, &id, stage);
-                                    show_menu.set(false);
+                        {
+                            let dot_color = match stage {
+                                DealStage::Lead => "bg-blue-500",
+                                DealStage::Qualified => "bg-violet-500",
+                                DealStage::Proposal => "bg-amber-500",
+                                DealStage::Negotiation => "bg-pink-500",
+                                DealStage::Won => "bg-emerald-500",
+                                DealStage::Lost => "bg-red-500",
+                            };
+
+                            rsx! {
+                                div {
+                                    class: "flex items-center gap-2 px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 cursor-pointer transition-colors",
+                                    onclick: {
+                                        let id = deal_id.clone();
+                                        move |e| {
+                                            e.stop_propagation();
+                                            update_deal_stage(&mut data, &id, stage);
+                                            show_menu.set(false);
+                                        }
+                                    },
+                                    span { class: "w-1.5 h-1.5 rounded-full {dot_color}" }
+                                    "{stage.display_name()}"
                                 }
-                            },
-                            span {
-                                class: "pipeline-dot",
-                                style: "background: {stage.color()}; width: 6px; height: 6px;",
                             }
-                            "{stage.display_name()}"
                         }
                     }
-                    div { class: "border-t border-solid", style: "border-color: var(--border); margin: 0.25rem 0;" }
+
+                    div { class: "border-t border-zinc-700 my-1" }
+
                     div {
-                        class: "dropdown-item danger",
+                        class: "flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 cursor-pointer transition-colors",
                         onclick: {
                             let id = deal_id.clone();
                             move |e| {
@@ -207,37 +230,28 @@ fn ClosedDealsColumn(won_deals: Vec<Deal>, lost_deals: Vec<Deal>) -> Element {
     let lost_value: f64 = lost_deals.iter().map(|d| d.value).sum();
 
     rsx! {
-        div { class: "pipeline-column",
-            style: "background: var(--bg-tertiary);",
-
+        div { class: "min-w-[280px] w-[280px] bg-dark-700 border border-zinc-800 rounded-xl flex flex-col",
             // Won Section
-            div { class: "pipeline-column-header",
-                style: "border-bottom: none;",
-                div { class: "pipeline-column-title",
-                    span {
-                        class: "pipeline-dot",
-                        style: "background: var(--success);",
-                    }
-                    span { class: "font-medium text-sm text-success", "Won" }
+            div { class: "flex items-center justify-between p-4",
+                div { class: "flex items-center gap-2",
+                    span { class: "w-2 h-2 rounded-full bg-emerald-500" }
+                    span { class: "font-medium text-sm text-emerald-400", "Won" }
                 }
                 div { class: "flex items-center gap-2",
-                    span { class: "pipeline-column-count", "{won_deals.len()}" }
-                    span { class: "text-xs text-success font-mono", "{format_currency(won_value)}" }
+                    span { class: "text-xs bg-dark-600 px-2 py-0.5 rounded-full text-zinc-500", "{won_deals.len()}" }
+                    span { class: "text-xs text-emerald-400 font-mono", "{format_currency(won_value)}" }
                 }
             }
 
             // Lost Section
-            div { class: "pipeline-column-header",
-                div { class: "pipeline-column-title",
-                    span {
-                        class: "pipeline-dot",
-                        style: "background: var(--danger);",
-                    }
-                    span { class: "font-medium text-sm text-danger", "Lost" }
+            div { class: "flex items-center justify-between p-4 border-t border-zinc-800",
+                div { class: "flex items-center gap-2",
+                    span { class: "w-2 h-2 rounded-full bg-red-500" }
+                    span { class: "font-medium text-sm text-red-400", "Lost" }
                 }
                 div { class: "flex items-center gap-2",
-                    span { class: "pipeline-column-count", "{lost_deals.len()}" }
-                    span { class: "text-xs text-danger font-mono", "{format_currency(lost_value)}" }
+                    span { class: "text-xs bg-dark-600 px-2 py-0.5 rounded-full text-zinc-500", "{lost_deals.len()}" }
+                    span { class: "text-xs text-red-400 font-mono", "{format_currency(lost_value)}" }
                 }
             }
         }

@@ -1,0 +1,72 @@
+/*
+ * Tailwind v4 CSS Entry Point (DX Auto-Detected)
+ *
+ * This file is automatically detected by Dioxus CLI (DX).
+ * DX will download the Tailwind CLI and generate assets/tailwind.css automatically.
+ *
+ * See: https://dioxuslabs.com/learn/0.7/essentials/ui/styling#tailwind
+ */
+
+@import "tailwindcss";
+
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
+
+/* Tell Tailwind to scan Rust source files for classes */
+@source "./src/**/*.{rs,html,css}";
+
+@theme {
+    /* Custom Color Palette */
+    --color-dark-900: #0a0a0b;
+    --color-dark-800: #111113;
+    --color-dark-700: #18181b;
+    --color-dark-600: #1f1f23;
+    --color-dark-500: #27272a;
+    --color-dark-400: #3f3f46;
+
+    --color-accent: #00d4ff;
+    --color-accent-dim: #00a8cc;
+
+    /* Font Families */
+    --font-mono: "JetBrains Mono", monospace;
+    --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+    body {
+        font-family: var(--font-sans);
+    }
+}
+
+/* Reset overflow for app shell */
+html,
+body,
+#main {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Scrollbar Styling - Tailwind doesn't handle this */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #18181b;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #52525b;
+}
+
+/* Custom focus ring for accessibility */
+*:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: 2px;
+}

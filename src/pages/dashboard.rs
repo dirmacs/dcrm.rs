@@ -1,4 +1,4 @@
-use crate::models::{ActivityType, DealStage};
+use crate::models::{Activity, ActivityType, DealStage};
 use crate::state::{Modal, use_app_data, use_modal};
 use dioxus::prelude::*;
 
@@ -7,42 +7,56 @@ pub fn DashboardPage() -> Element {
     let data = use_app_data();
     let mut modal = use_modal();
 
+    let total_contacts = data.read().contacts.len();
+    let active_deals = data.read().active_deals_count();
+    let pipeline_value = data.read().total_pipeline_value();
+    let won_value = data.read().won_deals_value();
+    let pending_tasks = data.read().pending_tasks_count();
+    let recent_activities: Vec<Activity> = data
+        .read()
+        .recent_activities(5)
+        .into_iter()
+        .cloned()
+        .collect();
+
     rsx! {
-        div { class: "content-area",
+        div { class: "flex-1 overflow-y-auto p-6",
             // Stats Grid
-            div { class: "stats-grid",
+            div { class: "grid grid-cols-4 gap-4 mb-6",
                 StatCard {
                     label: "Total Contacts",
-                    value: data.read().contacts.len().to_string(),
+                    value: total_contacts.to_string(),
                     icon: "◎",
+                    color: "text-zinc-100",
                 }
                 StatCard {
                     label: "Active Deals",
-                    value: data.read().active_deals_count().to_string(),
+                    value: active_deals.to_string(),
                     icon: "◈",
+                    color: "text-zinc-100",
                 }
                 StatCard {
                     label: "Pipeline Value",
-                    value: format_currency(data.read().total_pipeline_value()),
+                    value: format_currency(pipeline_value),
                     icon: "◆",
-                    accent: true,
+                    color: "text-accent",
                 }
                 StatCard {
                     label: "Won Revenue",
-                    value: format_currency(data.read().won_deals_value()),
+                    value: format_currency(won_value),
                     icon: "✓",
-                    positive: true,
+                    color: "text-emerald-400",
                 }
             }
 
             // Two-column layout
             div { class: "grid grid-cols-2 gap-6",
                 // Pipeline Overview
-                div { class: "card",
-                    div { class: "card-header",
-                        h3 { class: "card-title", "Pipeline Overview" }
+                div { class: "bg-dark-800 border border-zinc-800 rounded-xl overflow-hidden",
+                    div { class: "flex items-center justify-between px-5 py-4 border-b border-zinc-800",
+                        h3 { class: "text-sm font-semibold text-zinc-100", "Pipeline Overview" }
                     }
-                    div { class: "card-body",
+                    div { class: "p-5",
                         for stage in DealStage::active() {
                             PipelineStageRow {
                                 stage: stage,
@@ -54,48 +68,28 @@ pub fn DashboardPage() -> Element {
                 }
 
                 // Recent Activity
-                div { class: "card",
-                    div { class: "card-header",
-                        h3 { class: "card-title", "Recent Activity" }
+                div { class: "bg-dark-800 border border-zinc-800 rounded-xl overflow-hidden",
+                    div { class: "flex items-center justify-between px-5 py-4 border-b border-zinc-800",
+                        h3 { class: "text-sm font-semibold text-zinc-100", "Recent Activity" }
                         button {
-                            class: "btn btn-ghost btn-sm",
+                            class: "text-sm text-zinc-400 hover:text-zinc-100 transition-colors",
                             "View All"
                         }
                     }
-                    div { class: "card-body",
-                        {
-                            let recent_activities: Vec<_> = data.read().recent_activities(5)
-                                .into_iter()
-                                .cloned()
-                                .collect();
-
-                            if recent_activities.is_empty() {
-                                rsx! {
-                                    div { class: "empty-state",
-                                        div { class: "empty-state-title", "No activities yet" }
-                                        div { class: "empty-state-text", "Start logging your interactions" }
-                                    }
-                                }
-                            } else {
-                                rsx! {
-                                    div { class: "activity-list",
-                                        for activity in recent_activities {
-                                            {
-                                                let icon = activity.activity_type.icon().to_string();
-                                                let title = activity.title.clone();
-                                                let meta = activity.format_date();
-                                                let completed = activity.completed;
-
-                                                rsx! {
-                                                    ActivityRow {
-                                                        icon: icon,
-                                                        title: title,
-                                                        meta: meta,
-                                                        completed: completed,
-                                                    }
-                                                }
-                                            }
-                                        }
+                    div { class: "p-5",
+                        if recent_activities.is_empty() {
+                            div { class: "flex flex-col items-center justify-center py-8 text-center",
+                                div { class: "text-zinc-100 font-medium", "No activities yet" }
+                                div { class: "text-sm text-zinc-500", "Start logging your interactions" }
+                            }
+                        } else {
+                            div { class: "space-y-1",
+                                for activity in recent_activities {
+                                    ActivityRow {
+                                        icon: activity.activity_type.icon().to_string(),
+                                        title: activity.title.clone(),
+                                        meta: activity.format_date(),
+                                        completed: activity.completed,
                                     }
                                 }
                             }
@@ -105,25 +99,24 @@ pub fn DashboardPage() -> Element {
             }
 
             // Pending Tasks
-            div { class: "card mt-6",
-                div { class: "card-header",
-                    h3 { class: "card-title",
-                        "Pending Tasks"
-                        if data.read().pending_tasks_count() > 0 {
+            div { class: "bg-dark-800 border border-zinc-800 rounded-xl overflow-hidden mt-6",
+                div { class: "flex items-center justify-between px-5 py-4 border-b border-zinc-800",
+                    div { class: "flex items-center gap-2",
+                        h3 { class: "text-sm font-semibold text-zinc-100", "Pending Tasks" }
+                        if pending_tasks > 0 {
                             span {
-                                style: "margin-left: 0.5rem; font-size: 0.75rem; color: var(--warning);
-                                        background: rgba(245, 158, 11, 0.15); padding: 2px 8px; border-radius: 10px;",
-                                "{data.read().pending_tasks_count()}"
+                                class: "text-xs bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded-full",
+                                "{pending_tasks}"
                             }
                         }
                     }
                     button {
-                        class: "btn btn-secondary btn-sm",
+                        class: "px-3 py-1.5 text-sm bg-dark-700 border border-zinc-700 text-zinc-100 rounded-md hover:bg-zinc-700 transition-colors",
                         onclick: move |_| modal.set(Modal::NewActivity),
                         "+ Add Task"
                     }
                 }
-                div { class: "card-body",
+                div { class: "p-5",
                     {
                         let tasks: Vec<_> = data.read().activities.iter()
                             .filter(|a| a.activity_type == ActivityType::Task && !a.completed)
@@ -132,15 +125,17 @@ pub fn DashboardPage() -> Element {
 
                         if tasks.is_empty() {
                             rsx! {
-                                div { class: "empty-state",
-                                    div { class: "empty-state-icon", "✓" }
-                                    div { class: "empty-state-title", "All caught up!" }
-                                    div { class: "empty-state-text", "No pending tasks" }
+                                div { class: "flex flex-col items-center justify-center py-8 text-center",
+                                    div { class: "w-12 h-12 bg-dark-700 rounded-full flex items-center justify-center text-xl text-zinc-500 mb-3",
+                                        "✓"
+                                    }
+                                    div { class: "text-zinc-100 font-medium", "All caught up!" }
+                                    div { class: "text-sm text-zinc-500", "No pending tasks" }
                                 }
                             }
                         } else {
                             rsx! {
-                                div { class: "activity-list",
+                                div { class: "space-y-1",
                                     for task in tasks.iter().take(5) {
                                         TaskRow {
                                             id: task.id.clone(),
@@ -163,60 +158,48 @@ fn StatCard(
     label: &'static str,
     value: String,
     icon: &'static str,
-    #[props(default = false)] accent: bool,
-    #[props(default = false)] positive: bool,
+    color: &'static str,
 ) -> Element {
-    let value_style = if accent {
-        "color: var(--accent);"
-    } else if positive {
-        "color: var(--success);"
-    } else {
-        ""
-    };
-
     rsx! {
-        div { class: "stat-card",
+        div { class: "bg-dark-800 border border-zinc-800 rounded-xl p-5",
             div { class: "flex items-center justify-between mb-2",
-                span { class: "stat-label", "{label}" }
-                span {
-                    style: "font-size: 1.25rem; opacity: 0.5;",
-                    "{icon}"
-                }
+                span { class: "text-xs font-medium text-zinc-500", "{label}" }
+                span { class: "text-xl opacity-50 text-zinc-500", "{icon}" }
             }
-            div {
-                class: "stat-value",
-                style: "{value_style}",
-                "{value}"
-            }
+            div { class: "text-2xl font-bold font-mono {color}", "{value}" }
         }
     }
 }
 
 #[component]
 fn PipelineStageRow(stage: DealStage, count: usize, value: f64) -> Element {
-    let total_pipeline = 600000.0; // Rough estimate for percentage calculation
+    let total_pipeline = 600000.0;
     let percentage = ((value / total_pipeline) * 100.0).min(100.0);
 
+    let color_class = match stage {
+        DealStage::Lead => "bg-blue-500",
+        DealStage::Qualified => "bg-violet-500",
+        DealStage::Proposal => "bg-amber-500",
+        DealStage::Negotiation => "bg-pink-500",
+        DealStage::Won => "bg-emerald-500",
+        DealStage::Lost => "bg-red-500",
+    };
+
     rsx! {
-        div {
-            style: "padding: 0.75rem 0; border-bottom: 1px solid var(--border);",
+        div { class: "py-3 border-b border-zinc-800 last:border-b-0",
             div { class: "flex items-center justify-between mb-2",
                 div { class: "flex items-center gap-2",
-                    span {
-                        class: "pipeline-dot",
-                        style: "background: {stage.color()};",
-                    }
-                    span { class: "text-sm font-medium", "{stage.display_name()}" }
-                    span { class: "text-xs text-muted", "({count})" }
+                    span { class: "w-2 h-2 rounded-full {color_class}" }
+                    span { class: "text-sm font-medium text-zinc-100", "{stage.display_name()}" }
+                    span { class: "text-xs text-zinc-500", "({count})" }
                 }
                 span { class: "font-mono text-sm text-accent", "{format_currency(value)}" }
             }
             // Progress bar
-            div {
-                style: "height: 4px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden;",
+            div { class: "h-1 bg-dark-700 rounded-full overflow-hidden",
                 div {
-                    style: "height: 100%; background: {stage.color()}; width: {percentage}%;
-                            border-radius: 2px; transition: width 0.3s ease;",
+                    class: "h-full {color_class} rounded-full transition-all duration-300",
+                    style: "width: {percentage}%",
                 }
             }
         }
@@ -225,16 +208,16 @@ fn PipelineStageRow(stage: DealStage, count: usize, value: f64) -> Element {
 
 #[component]
 fn ActivityRow(icon: String, title: String, meta: String, completed: bool) -> Element {
-    let opacity = if completed { "0.5" } else { "1" };
+    let opacity = if completed { "opacity-50" } else { "" };
 
     rsx! {
-        div {
-            class: "activity-item",
-            style: "opacity: {opacity};",
-            div { class: "activity-icon", "{icon}" }
-            div { class: "activity-content",
-                div { class: "activity-title", "{title}" }
-                div { class: "activity-meta", "{meta}" }
+        div { class: "flex items-center gap-4 py-3 border-b border-zinc-800 last:border-b-0 {opacity}",
+            div { class: "w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center text-sm",
+                "{icon}"
+            }
+            div { class: "flex-1",
+                div { class: "text-sm text-zinc-100", "{title}" }
+                div { class: "text-xs text-zinc-500", "{meta}" }
             }
         }
     }
@@ -246,18 +229,15 @@ fn TaskRow(id: String, title: String, due: Option<String>) -> Element {
 
     rsx! {
         div {
-            class: "activity-item cursor-pointer",
+            class: "flex items-center gap-4 py-3 border-b border-zinc-800 last:border-b-0 cursor-pointer hover:bg-dark-700/50 -mx-2 px-2 rounded transition-colors",
             onclick: move |_| {
                 crate::state::toggle_activity_completed(&mut data, &id);
             },
-            div {
-                class: "activity-icon",
-                style: "border: 2px solid var(--border); background: transparent;",
-            }
-            div { class: "activity-content",
-                div { class: "activity-title", "{title}" }
+            div { class: "w-5 h-5 border-2 border-zinc-600 rounded flex items-center justify-center hover:border-accent transition-colors" }
+            div { class: "flex-1",
+                div { class: "text-sm text-zinc-100", "{title}" }
                 if let Some(d) = due {
-                    div { class: "activity-meta", "Due: {d}" }
+                    div { class: "text-xs text-zinc-500", "Due: {d}" }
                 }
             }
         }

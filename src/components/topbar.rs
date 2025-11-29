@@ -1,5 +1,5 @@
-use crate::state::{Modal, View, use_current_view, use_modal, use_search_query};
 use dioxus::prelude::*;
+use crate::state::{View, Modal, use_current_view, use_modal, use_search_query};
 
 #[component]
 pub fn TopBar() -> Element {
@@ -22,29 +22,34 @@ pub fn TopBar() -> Element {
     };
 
     rsx! {
-        header { class: "top-bar",
+        header { 
+            class: "h-14 min-h-14 flex items-center justify-between px-6 bg-dark-800 border-b border-zinc-800",
+            
             // Page title
-            h1 { class: "page-title", "{title}" }
+            h1 { class: "text-lg font-semibold text-zinc-100", "{title}" }
 
             // Search bar
-            div { class: "search-bar",
-                span { style: "color: var(--text-muted);", "⌕" }
+            div { 
+                class: "flex items-center gap-2 bg-dark-700 border border-zinc-700 rounded-lg px-4 py-2 w-80
+                        focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/20 transition-all",
+                span { class: "text-zinc-500", "⌕" }
                 input {
-                    class: "search-input",
+                    class: "flex-1 bg-transparent border-none outline-none text-zinc-100 text-sm placeholder-zinc-500",
                     r#type: "text",
                     placeholder: "Search contacts, deals, activities...",
                     value: "{search_query}",
                     onfocus: move |_| modal.set(Modal::Search),
                     oninput: move |e| search_query.set(e.value()),
                 }
-                span { class: "search-shortcut", "⌘K" }
+                span { class: "font-mono text-[10px] text-zinc-500 bg-dark-600 px-1.5 py-0.5 rounded", "⌘K" }
             }
 
             // Actions
-            div { class: "quick-actions",
+            div { class: "flex gap-2",
                 if let Some(label) = new_button_label {
                     button {
-                        class: "btn btn-primary",
+                        class: "inline-flex items-center gap-2 px-4 py-2 bg-accent text-dark-900 text-sm font-medium 
+                                rounded-md hover:bg-accent-dim transition-colors",
                         onclick: move |_| {
                             match *current_view.read() {
                                 View::Contacts => modal.set(Modal::NewContact),
